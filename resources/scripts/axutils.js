@@ -4,14 +4,6 @@
  *
  *
  */
- var oMeta = document.createElement('meta');
-
-            oMeta.name = 'viewport';
-
-            oMeta.content = 'width=375, minimum-scale=0.5, maximum-scale=3, user-scalable=no';
-
-            document.getElementsByTagName('head')[0].appendChild(oMeta)
-
 const START_URL_NAME = 'start.html';
 const PAGE_ID_NAME = 'id';
 const PAGE_URL_NAME = 'p';
