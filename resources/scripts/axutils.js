@@ -13,6 +13,11 @@ const SITEMAP_CLOSE_VALUE = "2";
 const GLOBAL_VAR_NAME = '&ZQZ=s&';
 const GLOBAL_VAR_CHECKSUM = 'CSUM';
 
+var oMeta = document.createElement('meta');
+        oMeta.content = 'width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover';
+        oMeta.name = 'viewport';
+        document.getElementsByTagName('head')[0].appendChild(oMeta);
+
  (function() {
      // define the root namespace object
      if(!window.$axure) window.$axure = {};
