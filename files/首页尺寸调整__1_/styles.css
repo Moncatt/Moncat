@@ -3,7 +3,7 @@
   background-image:none;
   position:static;
   left:auto;
-  width:750px;
+  width:375px;
   margin-left:0;
   margin-right:0;
   text-align:left;
@@ -6964,16 +6964,16 @@
   position:absolute;
   left:0px;
   top:0px;
-  width:750px;
-  height:2643px;
+  width:375px;
+  height:1322px;
 }
 #u525 {
   border-width:0px;
   position:absolute;
-  left:0px;
-  top:168px;
-  width:750px;
-  height:2643px;
+  left:-468px;
+  top:-11px;
+  width:375px;
+  height:1322px;
   display:flex;
 }
 #u525 .text {

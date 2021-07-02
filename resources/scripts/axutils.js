@@ -1,13 +1,7 @@
-﻿/*
- *
- *
- *
- *
- */
- var oMeta = document.createElement('meta');
-        oMeta.content = 'width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover';
-        oMeta.name = 'viewport';
-        document.getElementsByTagName('head')[0].appendChild(oMeta);
+﻿var oMeta = document.createElement('meta');
+            oMeta.name = 'viewport';
+            oMeta.content = 'width=375, minimum-scale=0.5, maximum-scale=3, user-scalable=no';
+            document.getElementsByTagName('head')[0].appendChild(oMeta);
 		
 const START_URL_NAME = 'start.html';
 const PAGE_ID_NAME = 'id';
