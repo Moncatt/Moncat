@@ -718,8 +718,6 @@ $axure.internal(function ($ax) {
             var $element = $jobj(elementId);
             var itemId = $ax.repeater.getItemIdFromElementId(elementId);
 
-            const isItem = itemId && $ax.public.fn.IsRepeater(dObj.type);
-
             // Focus has to be done before on focus fires
             // Set up focus
             if ($ax.public.fn.IsTextArea(dObj.type) || $ax.public.fn.IsTextBox(dObj.type) || $ax.public.fn.IsCheckBox(dObj.type) || $ax.public.fn.IsRadioButton(dObj.type) ||
@@ -754,35 +752,31 @@ $axure.internal(function ($ax) {
             _attachIxStyleEvents(dObj, elementId, $element);
 
             var $axElement = $ax('#' + elementId);
-            // Base case is set up selected disabled error based on the default in the axobj, for non, repeaters and resetting repeaters
+            // Base case is set up selected disabled based on the default in the axobj, for non, repeaters and resetting repeaters
             var itemReset = refreshType == $ax.repeater.refreshType.reset;
             if(!itemId || itemReset) {
-                //initialize selected and error before disabled or else style state dictionaries will be incorrect
+                //initialize disabled elements, do this first before selected, cause if a widget is disabled, we don't want to apply selected style anymore
                 if ($ax.public.fn.IsVector(dObj.type) || $ax.public.fn.IsImageBox(dObj.type) || isDynamicPanel || $ax.public.fn.IsLayer(dObj.type)
                     || $ax.public.fn.IsTextBox(dObj.type) || $ax.public.fn.IsTextArea(dObj.type) || $ax.public.fn.IsComboBox(dObj.type) || $ax.public.fn.IsListBox(dObj.type)
                     || $ax.public.fn.IsCheckBox(dObj.type) || $ax.public.fn.IsRadioButton(dObj.type)) {
 
+                    if (dObj.disabled) $axElement.enabled(false);
+
                     // Initialize selected elements
                     // only set one member of selection group selected since subsequent calls
                     // will unselect the previous one anyway
-                    if(dObj.error) $axElement.error(true);
-
                     if(dObj.selected && !skipSelectedIds.has(elementId)) {
                         var group = $('#' + elementId).attr('selectiongroup');
                         if(group) for(var item of $("[selectiongroup='" + group + "']")) skipSelectedIds.add(item.id);
                         $axElement.selected(true);
                     }
-
-                    if (dObj.disabled) $axElement.enabled(false);
                 }
             } else if(refreshType == $ax.repeater.refreshType.preEval) {
-                // Otherwise everything should be set up correctly by pre-eval, want to set up selected/disabled/error dictionaries (and disabled status)
-                const isSelected = $element.hasClass('selected');
-                const isError = $element.hasClass('error');
-                const isDisabled = $element.hasClass('disabled');
-                if(isSelected) $axElement.selected(true);
-                if(isError) $axElement.error(true);
-                if(isDisabled) $axElement.enabled(false);
+                // Otherwise everything should be set up correctly by pre-eval, want to set up selected disabled dictionaries (and disabled status)
+                // Disabled layer/dynamic panel don't have the disabled class, but they do have the disabled attr written out, so use that in that case
+                if ($element.hasClass('disabled') ||
+                    (($ax.IsLayer(dObj.type) || $ax.IsDynamicPanel(dObj.type)) && $element.attr('disabled'))) $axElement.enabled(false);
+                if($element.hasClass('selected')) $axElement.selected(true);
             } else {
                 // Persist means we want to leave it as is, but we want to make sure we use selected based off of the backing data, and not some class that exists because of the reset
                 $element.removeClass('selected');
@@ -794,20 +788,12 @@ $axure.internal(function ($ax) {
             //    }
             //};
 
-            const isInput = $ax.public.fn.IsTextArea(dObj.type) || $ax.public.fn.IsTextBox(dObj.type);
-            if(isInput) {
-                var inputJobj = $jobj($ax.INPUT(elementId));
-                inputJobj.bind('keyup', function(e) {
-                    //prevents triggering player shortcuts
-                    e.preventDefault();
-                });
-            }
-
             // Initialize Placeholders. Right now this is text boxes and text areas.
             // Also, the assuption is being made that these widgets with the placeholder, have no other styles (this may change...)
             var hasPlaceholder = dObj.placeholderText == '' ? true : Boolean(dObj.placeholderText);
-            if(isInput && hasPlaceholder) {
+            if(($ax.public.fn.IsTextArea(dObj.type) || $ax.public.fn.IsTextBox(dObj.type)) && hasPlaceholder) {
                 // This is needed to initialize the placeholder state
+                var inputJobj = $jobj($ax.INPUT(elementId));
                 inputJobj.bind('focus', function () {
                     if(dObj.HideHintOnFocused) {
                         var id = this.id;
@@ -859,7 +845,7 @@ $axure.internal(function ($ax) {
                             if(!$ax.placeholderManager.isActive(inputId)) return;
                             $ax.placeholderManager.updatePlaceholder(inputId, false, true);
                         }
-                    }).bind('keyup', function() {
+                    }).bind('keyup', function(e) {
                         var id = this.id;
                         var inputIndex = id.indexOf('_input');
                         if(inputIndex == -1) return;
@@ -870,6 +856,9 @@ $axure.internal(function ($ax) {
                             $ax.placeholderManager.updatePlaceholder(inputId, true);
                             $ax.placeholderManager.moveCaret(id, 0);
                         }
+
+                        //prevents triggering player shortcuts
+                        e.preventDefault();
                     });
                 }
 
@@ -960,7 +949,7 @@ $axure.internal(function ($ax) {
             }
 
             // Attach handles for dynamic panels that propagate styles to inner items.
-            if ((isDynamicPanel || $ax.public.fn.IsLayer(dObj.type) || isItem) && dObj.propagate) {
+            if ((isDynamicPanel || $ax.public.fn.IsLayer(dObj.type)) && dObj.propagate) {
                 $element.mouseenter(function() {
                     dynamicPanelMouseOver(this.id);
                 }).mouseleave(function() {
@@ -1617,12 +1606,6 @@ $axure.internal(function ($ax) {
         else $ax.event.raiseSyntheticEvent(elementId, 'onUnselect');
     };
     $ax.event.raiseSelectedEvents = _raiseSelectedEvents;
-
-    var _raiseErrorEvents = function(elementId, value) {
-        if(value) $ax.event.raiseSyntheticEvent(elementId, 'onErrorSet');
-        else $ax.event.raiseSyntheticEvent(elementId, 'onErrorRemoved');
-    }
-    $ax.event.raiseErrorEvents = _raiseErrorEvents;
 
     var _raiseSyntheticEvent = function(elementId, eventName, skipShowDescription, eventInfo, nonSynthetic) {
         // Empty string used when this is an event directly on the page.
